@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YOUR CO₂ TODAY</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400;1,700&family=DM+Mono:wght@400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ── API KEY BAR ── -->
+  <div class="api-bar">
+    <label>Gemini API Key</label>
+    <input type="password" id="apiKey" placeholder="AIza... (paste once, saved automatically)" autocomplete="off">
+    <span id="apiKeyStatus"></span>
+    <button id="forgetKeyBtn" class="forget-btn">Forget Key</button>
+  </div>
+
+  <!-- ── MASTHEAD ── -->
+  <header class="masthead">
+    <div class="mast-topbar">
+      <span>Climate Intelligence — Daily Edition</span>
+      <span id="todayDate"></span>
+      <span>Vol. I · Issue 1</span>
+    </div>
+    <div class="mast-body">
+      <h1 class="hero-title">
+        <span>Your</span>
+        <span class="outline">CO₂</span>
+        <span>Today</span>
+      </h1>
+      <div class="mast-right">
+        <p class="hero-sub">Just tell us what you did today.<br>We'll handle the rest.</p>
+        <div class="globe-badge">🌍</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── FACT STRIP ── -->
+  <div class="fact-strip">
+    <div class="fact-card fc-1">
+      <span class="fact-icon">🍔</span>
+      <p class="fact-text">One beef burger = 2.5 kg CO₂</p>
+      <p class="fact-sub">Food emissions</p>
+    </div>
+    <div class="fact-card fc-2">
+      <span class="fact-icon">📺</span>
+      <p class="fact-text">Streaming 1 hour of video = 36g CO₂</p>
+      <p class="fact-sub">Digital footprint</p>
+    </div>
+    <div class="fact-card fc-3">
+      <span class="fact-icon">✈️</span>
+      <p class="fact-text">Mumbai → Delhi = ~150 kg CO₂ per passenger</p>
+      <p class="fact-sub">Travel emissions</p>
+    </div>
+    <div class="fact-card fc-4">
+      <span class="fact-icon">🇮🇳</span>
+      <p class="fact-text">Average Indian emits 1.9 tonnes CO₂/year</p>
+      <p class="fact-sub">National average</p>
+    </div>
+    <div class="fact-card fc-5">
+      <span class="fact-icon">❄️</span>
+      <p class="fact-text">AC running 8 hours = ~3.2 kg CO₂</p>
+      <p class="fact-sub">Home energy</p>
+    </div>
+  </div>
+
+  <!-- ── INPUT SECTION ── -->
+  <div class="input-wrap">
+    <div class="input-left">
+      <div class="section-kicker">Track your impact</div>
+      <h2 class="input-headline">Describe your day</h2>
+      <p class="input-desc">
+        What did you eat, how did you travel, what did you use at home?
+        Write it naturally — we'll figure out the carbon math.
+      </p>
+      <textarea id="dayInput" placeholder="e.g. I drove 15km to college, had a chicken burger for lunch, kept the AC on for 4 hours, streamed Netflix for 2 hours and ordered food online..."></textarea>
+      <div class="error-box" id="errorBox"></div>
+      <button class="analyse-btn" id="analyseBtn" onclick="analyseDay()">
+        Analyse My Day <span class="btn-arrow">→</span>
+      </button>
+    </div>
+
+    <div class="input-right">
+      <p class="preview-label">Why this matters</p>
+      <div class="preview-card">
+        <h4>🌱 Small choices, big numbers</h4>
+        <p>Your daily habits add up to thousands of kg CO₂ per year. Knowing where it comes from is the first step.</p>
+      </div>
+      <div class="preview-card">
+        <h4>📍 Personalised to you</h4>
+        <p>Unlike generic calculators, we read your actual day and give you tips that match what you specifically did.</p>
+      </div>
+      <div class="preview-card">
+        <h4>⚡ Science-backed estimates</h4>
+        <p>We use standard IPCC and IEA emission factors calibrated for India's energy grid and food systems.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LOADING ── -->
+  <div id="loadingSection">
+    <div class="loading-inner">
+      <p class="loading-title">Calculating your footprint...</p>
+      <div class="loading-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+      <p class="loading-sub">Parsing activities · Applying emission factors · Building your report</p>
+    </div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div id="resultsSection">
+
+    <!-- Total hero -->
+    <div class="total-hero">
+      <div class="total-left">
+        <p class="kicker">Your total for today</p>
+        <div class="total-number" id="totalNumber">—</div>
+        <div class="total-unit">kg CO₂ emitted today</div>
+        <div class="verdict-badge" id="verdictBadge">—</div>
+        <p class="comparison-line" id="comparisonLine"></p>
+      </div>
+      <div class="total-right">
+        <canvas id="donutChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Activity breakdown -->
+    <div class="breakdown-section">
+      <h2>Activity Breakdown</h2>
+      <div class="breakdown-grid" id="breakdownGrid"></div>
+    </div>
+
+    <!-- At-home tips -->
+    <div class="tips-section">
+      <div class="tips-header">
+        <h2>At Home — What You Can Do</h2>
+        <span>Personalised tips</span>
+      </div>
+      <div class="tips-grid" id="homeTips"></div>
+    </div>
+
+    <!-- Local area tips -->
+    <div class="tips-section">
+      <div class="tips-header">
+        <h2>In Your Area — Local Actions</h2>
+        <span>Community tips</span>
+      </div>
+      <div class="tips-grid" id="areaTips"></div>
+    </div>
+
+  </div>
+
+  <!-- ── TICKER FOOTER ── -->
+  <div class="ticker-footer">
+    <div class="ticker-label">Climate Facts</div>
+    <div class="ticker-track">
+      <div class="ticker-inner" id="tickerInner"></div>
+    </div>
+  </div>
+
+  <footer>
+    CO₂ Tracker · Emission factors based on IPCC &amp; IEA data · For awareness purposes only · 2025
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
